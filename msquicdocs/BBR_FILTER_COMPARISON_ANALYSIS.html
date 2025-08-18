@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>BBR带宽滤波器对比分析：最大值 vs 平均值 </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="BBR带宽滤波器对比分析：最大值 vs 平均值 ">
+      
+      
+      <link rel="icon" href="favicon.ico">
+      <link rel="stylesheet" href="public/docfx.min.css">
+      <link rel="stylesheet" href="public/main.css">
+      <meta name="docfx:navrel" content="toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/QiangWu769/msquic-cloud-server/blob/main/BBR_FILTER_COMPARISON_ANALYSIS.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="index.html">
+            <img id="logo" class="svg" src="logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+
+      <div class="content">
+        <div class="actionbar">
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="bbr带宽滤波器对比分析最大值-vs-平均值">BBR带宽滤波器对比分析：最大值 vs 平均值</h1>
+
+<h2 id="1-滤波器特性对比">1. 滤波器特性对比</h2>
+<h3 id="11-最大值滤波器当前bbr实现">1.1 最大值滤波器（当前BBR实现）</h3>
+<p><strong>工作原理：</strong></p>
+<ul>
+<li>维护一个滑动窗口，记录最近N个RTT周期内观测到的最大delivery rate</li>
+<li>带宽估计 = max(recent_delivery_rates)</li>
+</ul>
+<p><strong>特性：</strong></p>
+<ul>
+<li>✅ <strong>激进探测</strong>：能够快速发现网络的峰值容量</li>
+<li>✅ <strong>快速收敛</strong>：在网络条件改善时能迅速适应</li>
+<li>✅ <strong>抗噪声</strong>：偶尔的低带宽样本不会影响估计</li>
+<li>❌ <strong>过度估计风险</strong>：可能基于瞬时峰值做出决策</li>
+<li>❌ <strong>不稳定</strong>：在变化的网络中可能导致震荡</li>
+</ul>
+<h3 id="12-平均值滤波器修改后的实现">1.2 平均值滤波器（修改后的实现）</h3>
+<p><strong>工作原理：</strong></p>
+<ul>
+<li>维护最近N个delivery rate样本的平均值</li>
+<li>带宽估计 = average(recent_delivery_rates)</li>
+</ul>
+<p><strong>特性：</strong></p>
+<ul>
+<li>✅ <strong>稳定估计</strong>：提供平滑、稳定的带宽估计</li>
+<li>✅ <strong>真实反映</strong>：更接近网络的实际平均性能</li>
+<li>✅ <strong>减少震荡</strong>：在ProbeBW中提供更平滑的行为</li>
+<li>❌ <strong>响应较慢</strong>：对网络条件变化的反应可能滞后</li>
+<li>❌ <strong>保守</strong>：可能错过短暂的高带宽机会</li>
+</ul>
+<h2 id="2-在不同网络场景下的表现分析">2. 在不同网络场景下的表现分析</h2>
+<h3 id="21-稳定网络环境">2.1 稳定网络环境</h3>
+<p><strong>场景</strong>：数据中心内部、固定宽带连接</p>
+<table>
+<thead>
+<tr>
+<th>滤波器类型</th>
+<th>带宽利用率</th>
+<th>延迟稳定性</th>
+<th>公平性</th>
+<th>收敛时间</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最大值</td>
+<td>95-98%</td>
+<td>中等</td>
+<td>较差</td>
+<td>快</td>
+</tr>
+<tr>
+<td>平均值</td>
+<td>85-92%</td>
+<td>优秀</td>
+<td>优秀</td>
+<td>中等</td>
+</tr>
+</tbody>
+</table>
+<p><strong>分析</strong>：</p>
+<ul>
+<li>最大值滤波器在稳定环境中能更充分利用带宽</li>
+<li>平均值滤波器提供更好的延迟控制和多流公平性</li>
+</ul>
+<h3 id="22-移动网络环境4g5g">2.2 移动网络环境（4G/5G）</h3>
+<p><strong>场景</strong>：移动用户、信号强度变化、基站切换</p>
+<table>
+<thead>
+<tr>
+<th>滤波器类型</th>
+<th>适应性</th>
+<th>稳定性</th>
+<th>功耗影响</th>
+<th>用户体验</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最大值</td>
+<td>优秀</td>
+<td>较差</td>
+<td>较高</td>
+<td>不稳定</td>
+</tr>
+<tr>
+<td>平均值</td>
+<td>良好</td>
+<td>优秀</td>
+<td>较低</td>
+<td>稳定</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键差异</strong>：</p>
+<ul>
+<li><strong>信号波动</strong>：5G网络中信号强度变化频繁，最大值滤波器可能基于短暂的高信号做出过度积极的决策</li>
+<li><strong>基站切换</strong>：平均值滤波器在切换过程中提供更平滑的过渡</li>
+<li><strong>毫米波特性</strong>：5G毫米波的高频特性导致信号衰减快，最大值滤波器可能过度反应</li>
+</ul>
+<h3 id="23-拥塞网络环境">2.3 拥塞网络环境</h3>
+<p><strong>场景</strong>：高负载的公共网络、Wi-Fi热点</p>
+<table>
+<thead>
+<tr>
+<th>滤波器类型</th>
+<th>拥塞控制</th>
+<th>队列管理</th>
+<th>丢包率</th>
+<th>整体吞吐</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最大值</td>
+<td>激进</td>
+<td>容易积压</td>
+<td>较高</td>
+<td>高但不稳定</td>
+</tr>
+<tr>
+<td>平均值</td>
+<td>保守</td>
+<td>良好</td>
+<td>较低</td>
+<td>稳定适中</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-probebw行为差异分析">3. ProbeBW行为差异分析</h2>
+<h3 id="31-增益循环影响">3.1 增益循环影响</h3>
+<p><strong>125% 增益阶段（探测阶段）：</strong></p>
+<pre><code>最大值滤波器：
+- 快速检测到峰值带宽 → 可能过早退出探测
+- 容易被瞬时高带宽误导
+- 探测更激进但可能不够充分
+
+平均值滤波器：
+- 需要持续的高带宽才会更新估计
+- 探测更充分、更稳定
+- 可能错过短暂的带宽增加机会
+</code></pre>
+<p><strong>75% 增益阶段（排空阶段）：</strong></p>
+<pre><code>最大值滤波器：
+- 基于历史峰值计算目标，可能排空不充分
+- 在网络条件已变化时仍使用过时的峰值
+
+平均值滤波器：
+- 基于平均性能计算目标，排空更彻底
+- 提供更好的延迟控制
+</code></pre>
+<h3 id="32-循环稳定性">3.2 循环稳定性</h3>
+<p><strong>最大值滤波器：</strong></p>
+<pre><code>带宽估计波动：高 → 增益调整频繁 → 发送率震荡 → 性能不稳定
+</code></pre>
+<p><strong>平均值滤波器：</strong></p>
+<pre><code>带宽估计平滑 → 增益调整稳定 → 发送率平稳 → 性能可预测
+</code></pre>
+<h2 id="4-数学模型分析">4. 数学模型分析</h2>
+<h3 id="41-网络带宽模型">4.1 网络带宽模型</h3>
+<p>假设真实网络带宽为时变函数：<code>BW(t) = BW_base + noise(t)</code></p>
+<p>其中：</p>
+<ul>
+<li><code>BW_base</code>：基础带宽</li>
+<li><code>noise(t)</code>：时变噪声（信号波动、拥塞等）</li>
+</ul>
+<h3 id="42-滤波器响应">4.2 滤波器响应</h3>
+<p><strong>最大值滤波器：</strong></p>
+<pre><code>BW_estimate = max(BW(t-N*RTT) ... BW(t))
+≈ BW_base + max(noise(t-N*RTT) ... noise(t))
+</code></pre>
+<ul>
+<li>趋向于高估带宽</li>
+<li>对正向噪声敏感，对负向噪声免疫</li>
+</ul>
+<p><strong>平均值滤波器：</strong></p>
+<pre><code>BW_estimate = mean(BW(t-N*RTT) ... BW(t))
+≈ BW_base + mean(noise(t-N*RTT) ... noise(t))
+</code></pre>
+<ul>
+<li>如果噪声均值为0，则估计接近真实值</li>
+<li>对所有噪声都进行平均化处理</li>
+</ul>
+<h2 id="5-具体场景建议">5. 具体场景建议</h2>
+<h3 id="51-推荐使用最大值滤波器的场景">5.1 推荐使用最大值滤波器的场景</h3>
+<ol>
+<li><strong>数据中心网络</strong>：稳定、高带宽、低延迟要求不严格</li>
+<li><strong>大文件传输</strong>：需要最大化吞吐量</li>
+<li><strong>批量数据同步</strong>：延迟不敏感，吞吐量优先</li>
+<li><strong>网络测速工具</strong>：需要发现网络峰值性能</li>
+</ol>
+<h3 id="52-推荐使用平均值滤波器的场景">5.2 推荐使用平均值滤波器的场景</h3>
+<ol>
+<li><strong>移动网络（4G/5G）</strong>：信号变化频繁，需要稳定性</li>
+<li><strong>实时应用</strong>：视频会议、在线游戏等延迟敏感应用</li>
+<li><strong>多用户环境</strong>：需要公平性和稳定性</li>
+<li><strong>IoT设备</strong>：功耗敏感，需要稳定的网络行为</li>
+<li><strong>Wi-Fi网络</strong>：信号强度变化、干扰频繁</li>
+</ol>
+<h2 id="6-混合策略建议">6. 混合策略建议</h2>
+<h3 id="61-自适应滤波器">6.1 自适应滤波器</h3>
+<p>根据网络条件动态选择滤波策略：</p>
+<pre><code class="lang-c">// 伪代码
+if (network_stability_high &amp;&amp; latency_tolerance_high) {
+    use_max_filter();
+} else if (mobile_network || real_time_app) {
+    use_average_filter();
+} else {
+    use_weighted_combination();
+}
+</code></pre>
+<h3 id="62-加权组合">6.2 加权组合</h3>
+<pre><code class="lang-c">BW_estimate = α * max_estimate + (1-α) * avg_estimate
+</code></pre>
+<p>其中α可根据网络条件动态调整：</p>
+<ul>
+<li>稳定网络：α = 0.8（偏向最大值）</li>
+<li>移动网络：α = 0.3（偏向平均值）</li>
+</ul>
+<h2 id="7-总结">7. 总结</h2>
+<p><strong>最大值滤波器</strong>适合追求峰值性能的稳定网络环境，而<strong>平均值滤波器</strong>更适合需要稳定性和可预测性的变化网络环境。</p>
+<p>在5G等移动网络中，由于信号的高频特性和快速变化，平均值滤波器通常能提供更好的整体用户体验，尽管可能牺牲一些峰值性能。</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/QiangWu769/msquic-cloud-server/blob/main/BBR_FILTER_COMPARISON_ANALYSIS.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

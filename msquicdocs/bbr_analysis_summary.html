@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>BBR 单连接 vs 4连接 性能对比分析报告 </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="BBR 单连接 vs 4连接 性能对比分析报告 ">
+      
+      
+      <link rel="icon" href="favicon.ico">
+      <link rel="stylesheet" href="public/docfx.min.css">
+      <link rel="stylesheet" href="public/main.css">
+      <meta name="docfx:navrel" content="toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/QiangWu769/msquic-cloud-server/blob/main/bbr_analysis_summary.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="index.html">
+            <img id="logo" class="svg" src="logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+
+      <div class="content">
+        <div class="actionbar">
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="bbr-单连接-vs-4连接-性能对比分析报告">BBR 单连接 vs 4连接 性能对比分析报告</h1>
+
+<h2 id="概述">概述</h2>
+<p>本报告基于对MSQuic BBR拥塞控制算法在单连接和4连接场景下的日志分析，对比了两种配置的性能差异。</p>
+<h2 id="测试数据概况">测试数据概况</h2>
+<ul>
+<li><p><strong>单连接日志</strong>: <code>bbr_log.txt</code></p>
+<ul>
+<li>测试时长: 10.63秒</li>
+<li>日志记录数: 562条</li>
+<li>单个连接的完整BBR行为轨迹</li>
+</ul>
+</li>
+<li><p><strong>4连接日志</strong>: <code>4connsbbr_log.txt</code></p>
+<ul>
+<li>测试时长: 13.40秒</li>
+<li>日志记录数: 1632条 (聚合后135个时间窗口)</li>
+<li>4个并发连接的交替日志记录</li>
+</ul>
+</li>
+</ul>
+<h2 id="关键性能指标对比">关键性能指标对比</h2>
+<h3 id="-吞吐量性能">🚀 吞吐量性能</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>单连接</th>
+<th>4连接</th>
+<th>提升幅度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>平均总吞吐量</strong></td>
+<td>355.66 Mbps</td>
+<td>1444.92 Mbps</td>
+<td><strong>+306.3%</strong></td>
+</tr>
+<tr>
+<td><strong>峰值吞吐量</strong></td>
+<td>3546.32 Mbps</td>
+<td>5081.95 Mbps</td>
+<td><strong>+43.3%</strong></td>
+</tr>
+<tr>
+<td><strong>平均发送速率</strong></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>平均接收速率</strong></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键发现</strong>:</p>
+<ul>
+<li>4连接配置在平均吞吐量上有显著提升(3倍以上)</li>
+<li>峰值吞吐量提升相对较小(43%)，说明单连接已能达到较高瞬时速率</li>
+</ul>
+<h3 id="-网络延迟">📡 网络延迟</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>单连接</th>
+<th>4连接</th>
+<th>变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>平均RTT</strong></td>
+<td>97.75 ms</td>
+<td>171.52 ms</td>
+<td><strong>+75.5%</strong> ⬆️</td>
+</tr>
+<tr>
+<td><strong>最小RTT</strong></td>
+<td>49.33 ms</td>
+<td>33.37 ms</td>
+<td><strong>-32.3%</strong> ⬇️</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键发现</strong>:</p>
+<ul>
+<li>4连接场景下平均RTT显著增加，可能由于网络拥塞加剧</li>
+<li>最小RTT反而降低，可能某些连接获得了更好的路径</li>
+</ul>
+<h3 id="-拥塞控制">🔄 拥塞控制</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>单连接</th>
+<th>4连接</th>
+<th>变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>平均CWND</strong></td>
+<td>5316.7 KB</td>
+<td>25189.9 KB</td>
+<td><strong>+374.0%</strong></td>
+</tr>
+<tr>
+<td><strong>最大CWND</strong></td>
+<td>7262.7 KB</td>
+<td>40044.6 KB</td>
+<td><strong>+451.4%</strong></td>
+</tr>
+<tr>
+<td><strong>平均InFlight</strong></td>
+<td>4296.4 KB</td>
+<td>22063.5 KB</td>
+<td><strong>+413.6%</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键发现</strong>:</p>
+<ul>
+<li>4连接总拥塞窗口显著增大，有效利用了可用带宽</li>
+<li>InFlight数据量相应增加，但比例合理</li>
+</ul>
+<h3 id="-丢包分析">📦 丢包分析</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>单连接</th>
+<th>4连接</th>
+<th>变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>总丢包数</strong></td>
+<td>85,884</td>
+<td>47,589</td>
+<td><strong>-44.6%</strong> ⬇️</td>
+</tr>
+<tr>
+<td><strong>丢包事件数</strong></td>
+<td>158</td>
+<td>110</td>
+<td><strong>-30.4%</strong> ⬇️</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键发现</strong>:</p>
+<ul>
+<li>4连接场景下总丢包数和丢包事件都有所减少</li>
+<li>可能因为连接间的负载分散减少了单点拥塞</li>
+</ul>
+<h3 id="-bbr状态分布">🔀 BBR状态分布</h3>
+<h4 id="单连接状态分布">单连接状态分布:</h4>
+<ul>
+<li><strong>STARTUP</strong>: 9.4% (53次)</li>
+<li><strong>DRAIN</strong>: 2.0% (11次)</li>
+<li><strong>PROBE_BW</strong>: 88.6% (498次)</li>
+</ul>
+<h4 id="4连接状态分布">4连接状态分布:</h4>
+<ul>
+<li><strong>STARTUP</strong>: 7.4% (10次)</li>
+<li><strong>PROBE_BW</strong>: 88.9% (120次)</li>
+<li><strong>PROBE_RTT</strong>: 3.7% (5次)</li>
+</ul>
+<p><strong>关键发现</strong>:</p>
+<ul>
+<li>两种配置都主要工作在PROBE_BW状态，符合BBR设计预期</li>
+<li>4连接出现了PROBE_RTT状态，说明有RTT探测行为</li>
+</ul>
+<h2 id="深度分析">深度分析</h2>
+<h3 id="-多连接优势">🎯 多连接优势</h3>
+<ol>
+<li><strong>带宽聚合效应</strong>: 4连接通过并行传输实现了3倍以上的吞吐量提升</li>
+<li><strong>负载分散</strong>: 多连接分散了网络负载，减少了丢包事件</li>
+<li><strong>容错能力</strong>: 单个连接的问题不会影响整体传输</li>
+</ol>
+<h3 id="-多连接挑战">⚠️ 多连接挑战</h3>
+<ol>
+<li><strong>延迟增加</strong>: 平均RTT增加了75%，可能影响实时应用</li>
+<li><strong>资源消耗</strong>: 更大的CWND和InFlight需要更多内存和网络资源</li>
+<li><strong>复杂性</strong>: 多连接管理增加了系统复杂性</li>
+</ol>
+<h3 id="-bbr算法表现">🔍 BBR算法表现</h3>
+<ol>
+<li><strong>快速收敛</strong>: 两种配置都能快速进入PROBE_BW状态</li>
+<li><strong>带宽探测</strong>: BBR能有效探测和利用可用带宽</li>
+<li><strong>公平性</strong>: 4连接间能相对公平地分享带宽资源</li>
+</ol>
+<h2 id="应用场景建议">应用场景建议</h2>
+<h3 id="适合多连接的场景">适合多连接的场景:</h3>
+<ul>
+<li><strong>大文件传输</strong>: 需要最大化吞吐量</li>
+<li><strong>批量数据同步</strong>: 对延迟不敏感</li>
+<li><strong>CDN内容分发</strong>: 充分利用带宽资源</li>
+</ul>
+<h3 id="适合单连接的场景">适合单连接的场景:</h3>
+<ul>
+<li><strong>实时通信</strong>: 对延迟敏感的应用</li>
+<li><strong>交互式应用</strong>: 需要快速响应</li>
+<li><strong>资源受限环境</strong>: 内存或连接数限制</li>
+</ul>
+<h2 id="总结">总结</h2>
+<p>4连接配置在吞吐量方面有显著优势，但会带来延迟增加的代价。选择合适的连接数需要根据具体应用需求在吞吐量和延迟之间进行权衡。BBR算法在两种配置下都表现良好，能够有效利用网络资源并维持稳定的传输状态。</p>
+<hr>
+<p><em>分析时间: $(date)</em><br>
+<em>数据来源: bbr_log.txt, 4connsbbr_log.txt</em><br>
+<em>分析工具: analyze_bbr_comparison.py</em></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/QiangWu769/msquic-cloud-server/blob/main/bbr_analysis_summary.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
