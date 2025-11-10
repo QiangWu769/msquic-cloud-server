@@ -519,7 +519,7 @@ BbrCongestionControlLogPacketSent(
     uint64_t ConnectionDuration = CurrentTime - Connection->Stats.Timing.Start;
     
     // Write detailed BBR packet log to the same log file as periodic logs
-    FILE* logFile = fopen("/home/wuq/msquic_cellular/bbr_logs/bbr_log.txt", "a");
+    FILE* logFile = fopen("/home/administrator/msquic-cloud-server/bbr_logs/quicbbr.txt", "a");
     if (logFile != NULL) {
         fprintf(logFile, "[BBR-PKT-SENT] T=%lu.%03lu s, PKT=%lu, Size=%u B, "
                "EstBW=%.2f Mbps, PacingRate=%.2f Mbps, DeliveryRate=%.2f Mbps, "
@@ -1073,7 +1073,7 @@ BbrCongestionControlOnDataAcknowledged(
             double LossRate = TotalSent > 0 ? ((double)TotalLost * 100.0) / (double)TotalSent : 0.0;
             
             // Write detailed BBR ACK log to file
-            FILE* logFile = fopen("/home/wuq/msquic_cellular/bbr_logs/bbr_log.txt", "a");
+            FILE* logFile = fopen("/home/administrator/msquic-cloud-server/bbr_logs/quicbbr.txt", "a");
             if (logFile != NULL) {
                 fprintf(logFile, "[BBR-PKT-ACKED] T=%lu.%03lu s, PKT=%lu, Size=%u B, "
                        "EstBW=%.2f Mbps, PacingRate=%.2f Mbps, DeliveryRate=%.2f Mbps, "
@@ -1179,7 +1179,7 @@ BbrCongestionControlOnDataLost(
         double LossRate = TotalSent > 0 ? ((double)TotalLost * 100.0) / (double)TotalSent : 0.0;
         
         // Write detailed BBR loss log to file
-        FILE* logFile = fopen("/home/wuq/msquic_cellular/bbr_logs/bbr_log.txt", "a");
+        FILE* logFile = fopen("/home/administrator/msquic-cloud-server/bbr_logs/quicbbr.txt", "a");
         if (logFile != NULL) {
             fprintf(logFile, "[BBR-PKT-LOST] T=%lu.%03lu s, PKT=%lu, Size=%u B, "
                    "EstBW=%.2f Mbps, PacingRate=%.2f Mbps, DeliveryRate=%.2f Mbps, "
@@ -1526,7 +1526,7 @@ BbrCongestionControlGeneratePerformanceSummary(
     }
     
     // Print BBR performance summary to file
-    FILE* summaryFile = fopen("/root/msquic/bbr_logs/bbr_summary.txt", "w");
+    FILE* summaryFile = fopen("/home/administrator/msquic-cloud-server/bbr_logs/quicbbr.txt", "a");
     if (summaryFile != NULL) {
         fprintf(summaryFile, "\n=== BBR Performance Summary ===\n");
         fprintf(summaryFile, "Connection Duration: %lu.%03lu s\n", 
@@ -1635,7 +1635,7 @@ BbrCongestionControlPeriodicLog(
     uint64_t ConnectionDuration = CurrentTime - Connection->Stats.Timing.Start;
     
     // Print periodic log to file
-    FILE* logFile = fopen("/home/wuq/msquic_cellular/bbr_logs/bbr_log_10ms.txt", "a");
+    FILE* logFile = fopen("/home/administrator/msquic-cloud-server/bbr_logs/quicbbr.txt", "a");
     if (logFile != NULL) {
         fprintf(logFile, "[BBR-LOG] T=%lu.%03lu s, Send=%.2f Mbps, Recv=%.2f Mbps, Total=%.2f Mbps, "
                 "EstBW=%.2f Mbps, PacingRate=%.2f Mbps, PacingGain=%.2fx, CwndGain=%.2fx, DeliveryRate=%.2f Mbps, "

@@ -398,3 +398,4 @@ artifacts/
 
 # Other large files
 *.log
+bbr_logs/
