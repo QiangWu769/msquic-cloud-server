@@ -835,7 +835,7 @@ TcpSsLoggerInitialize(
     memset(Logger->Entries, 0, Logger->MaxEntries * sizeof(TCP_SS_LOG_ENTRY));
     
     // 默认日志文件路径
-    TcpSsLoggerSetLogFile(Logger, "/home/administrator/msquic-cloud-server/bbr_logs/tcpbbr.txt");
+    TcpSsLoggerSetLogFile(Logger, "bbr_logs/tcpbbr.txt");
     
     Logger->Initialized = TRUE;
     return QUIC_STATUS_SUCCESS;

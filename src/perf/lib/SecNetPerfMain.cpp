@@ -317,14 +317,14 @@ QuicMainStart(
         }
         
         // 设置默认日志文件路径 - 确保目录存在
-        int mkdirResult = system("mkdir -p /home/administrator/msquic-cloud-server/bbr_logs");
+        int mkdirResult = system("mkdir -p bbr_logs");
         if (mkdirResult != 0) {
             WriteOutput("Warning: Failed to create log directory\n");
         }
         
         // 使用固定的日志文件名
         char logFilePath[256];
-        snprintf(logFilePath, sizeof(logFilePath), "/home/administrator/msquic-cloud-server/bbr_logs/tcpbbr.txt");
+        snprintf(logFilePath, sizeof(logFilePath), "bbr_logs/tcpbbr.txt");
         
         TcpLoggerSetLogFile(Logger, logFilePath);
         WriteOutput("Log file will be written to: %s\n", logFilePath);
