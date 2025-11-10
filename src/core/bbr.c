@@ -519,6 +519,7 @@ BbrCongestionControlLogPacketSent(
     uint64_t ConnectionDuration = CurrentTime - Connection->Stats.Timing.Start;
     
     // Write detailed BBR packet log to the same log file as periodic logs
+#if DEBUG
     FILE* logFile = fopen("bbr_logs/quicbbr.txt", "a");
     if (logFile != NULL) {
         fprintf(logFile, "[BBR-PKT-SENT] T=%lu.%03lu s, PKT=%lu, Size=%u B, "
@@ -550,6 +551,7 @@ BbrCongestionControlLogPacketSent(
                (double)Bbr->CwndGain / (double)GAIN_UNIT);   // Added CwndGain
         fclose(logFile);
     }
+#endif
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -1073,6 +1075,7 @@ BbrCongestionControlOnDataAcknowledged(
             double LossRate = TotalSent > 0 ? ((double)TotalLost * 100.0) / (double)TotalSent : 0.0;
             
             // Write detailed BBR ACK log to file
+#if DEBUG
             FILE* logFile = fopen("bbr_logs/quicbbr.txt", "a");
             if (logFile != NULL) {
                 fprintf(logFile, "[BBR-PKT-ACKED] T=%lu.%03lu s, PKT=%lu, Size=%u B, "
@@ -1101,6 +1104,7 @@ BbrCongestionControlOnDataAcknowledged(
                        (double)Bbr->CwndGain / (double)GAIN_UNIT);   // Added CwndGain
                 fclose(logFile);
             }
+#endif
             
             AckedPacket = AckedPacket->Next;
         }
@@ -1179,6 +1183,7 @@ BbrCongestionControlOnDataLost(
         double LossRate = TotalSent > 0 ? ((double)TotalLost * 100.0) / (double)TotalSent : 0.0;
         
         // Write detailed BBR loss log to file
+#if DEBUG
         FILE* logFile = fopen("bbr_logs/quicbbr.txt", "a");
         if (logFile != NULL) {
             fprintf(logFile, "[BBR-PKT-LOST] T=%lu.%03lu s, PKT=%lu, Size=%u B, "
@@ -1209,6 +1214,7 @@ BbrCongestionControlOnDataLost(
                    (double)Bbr->CwndGain / (double)GAIN_UNIT);   // Added CwndGain
             fclose(logFile);
         }
+#endif
     }
 
 #ifdef QUIC_ENHANCED_PACKET_LOGGING
@@ -1526,6 +1532,7 @@ BbrCongestionControlGeneratePerformanceSummary(
     }
     
     // Print BBR performance summary to file
+#if DEBUG
     FILE* summaryFile = fopen("bbr_logs/quicbbr.txt", "a");
     if (summaryFile != NULL) {
         fprintf(summaryFile, "\n=== BBR Performance Summary ===\n");
@@ -1562,6 +1569,7 @@ BbrCongestionControlGeneratePerformanceSummary(
         fprintf(summaryFile, "==============================\n\n");
         fclose(summaryFile);
     }
+#endif
 }
 
 //
@@ -1635,6 +1643,7 @@ BbrCongestionControlPeriodicLog(
     uint64_t ConnectionDuration = CurrentTime - Connection->Stats.Timing.Start;
     
     // Print periodic log to file
+#if DEBUG
     FILE* logFile = fopen("bbr_logs/quicbbr.txt", "a");
     if (logFile != NULL) {
         fprintf(logFile, "[BBR-LOG] T=%lu.%03lu s, Send=%.2f Mbps, Recv=%.2f Mbps, Total=%.2f Mbps, "
@@ -1669,6 +1678,7 @@ BbrCongestionControlPeriodicLog(
                 (unsigned long)Bbr->RecentAckDelay);
         fclose(logFile);
     }
+#endif
     
     // Update last logged values
     Bbr->LastPeriodicLogTime = CurrentTime;
